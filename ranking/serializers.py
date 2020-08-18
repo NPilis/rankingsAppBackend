@@ -1,6 +1,7 @@
 from .models import Ranking, RankingPosition, Comment
 from rest_framework import serializers
 
+
 class RankingPositionSerializer(serializers.ModelSerializer):
 
     class Meta:
