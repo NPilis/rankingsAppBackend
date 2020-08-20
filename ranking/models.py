@@ -55,12 +55,6 @@ class Ranking(models.Model):
     def __str__(self):
         return self.title
 
-    def save(self, *args, **kwargs):
-        if self.pk:
-            self.total_difference = self.likes.count() - self.dislikes.count()
-        super(Ranking, self).save(*args, **kwargs)
-
-
 class RankingPosition(models.Model):
     title = models.CharField(max_length=40)
     ranking = models.ForeignKey(
@@ -82,8 +76,7 @@ class RankingPosition(models.Model):
         super(RankingPosition, self).save(*args, **kwargs)
 
     class Meta:
-        ordering = ('ranking', 'position',)
-        unique_together = ('ranking', 'position',)
+        ordering = ('ranking','position')
 
 class Comment(models.Model):
 
@@ -114,3 +107,13 @@ class Comment(models.Model):
 
     def __str__(self):
         return '{{self.user}} commented {{self.ranking}}'
+
+    
+class Like(models.Model):
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    ranking = models.ForeignKey(Ranking, on_delete=models.CASCADE)
+
+
+class DisLike(models.Model):
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    ranking = models.ForeignKey(Ranking, on_delete=models.CASCADE)

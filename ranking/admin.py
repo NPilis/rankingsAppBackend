@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Ranking, RankingPosition
+from .models import Ranking, RankingPosition, Comment
 
 @admin.register(Ranking)
 class RankingAdmin(admin.ModelAdmin):
@@ -9,3 +9,7 @@ class RankingAdmin(admin.ModelAdmin):
 @admin.register(RankingPosition)
 class RankingPositionAdmin(admin.ModelAdmin):
     list_display = ['title', 'ranking', 'position']
+
+@admin.register(Comment)
+class Comment(admin.ModelAdmin):
+    list_display = ['ranking', 'user', 'reply_to', 'created_at']

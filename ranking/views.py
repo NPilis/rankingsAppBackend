@@ -1,5 +1,5 @@
 # Ranking App
-from ranking.models import Ranking, RankingPosition, Comment
+from ranking.models import Ranking, RankingPosition, Comment, Like, DisLike
 from ranking.serializers import (
     RankingPositionSerializer,
     RankingListSerializer,
@@ -18,7 +18,8 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import JsonResponse
-from rest_framework.decorators import permission_classes
+from rest_framework.decorators import permission_classes, api_view
+from .permissions import IsOwnerOrReadOnly
 
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.decorators import user_passes_test
@@ -68,7 +69,7 @@ class RankingPublicList(APIView):
         return Response(rank_serializer.data, status=status.HTTP_200_OK)
 
 class RankingDetail(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def dispatch(self, request, *args, **kwargs):
         self.viewAccess = False
@@ -94,7 +95,7 @@ class RankingDetail(APIView):
             serializer = RankingCreateUpdateSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({'error': 'Not an owner'}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
@@ -135,3 +136,27 @@ class CommentRanking(APIView):
             comment_serializer = CommentSerializer(comments, many=True)
             return Response(comment_serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def ranking_like(request, uuid, action):
+    if request.method == 'POST':
+        ranking = get_object_or_404(Ranking, uuid=uuid)
+        user = request.user
+        data_ = {'data': 'test'}
+        if action == 'like':
+            if user in ranking.likes.all():
+                ranking.likes.remove(user)
+                Like.objects.get(user=user, ranking=ranking).delete()
+                return Response({"status": "liked"}, status=status.HTTP_200_OK)
+            else:
+                ranking.likes.add(user)
+                Like.objects.create(user=user, ranking=ranking)
+            return Response(data_, status=status.HTTP_200_OK)
+        if action == 'dislike':
+            if user in ranking.dislikes.all():
+                ranking.dislikes.remove(user)
+                DisLike.objects.get(user=user, ranking=ranking).delete()
+            else:
+                ranking.dislikes.add(user)
+                DisLike.objects.create(user=user, ranking=ranking)
+            return Response(data_, status=status.HTTP_200_OK)

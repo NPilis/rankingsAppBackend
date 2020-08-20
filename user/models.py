@@ -31,3 +31,31 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+    def get_followers(self):
+        followers = Follow.objects.filter(user_to=self.user)
+        return followers
+    
+    def get_following(self):
+        followed_users = Follow.objects.filter(user_from=self.user)
+
+class Follow(models.Model):
+    user_from = models.ForeignKey(
+        User,
+        related_name="follow_creator",
+        on_delete=models.CASCADE
+    )
+    user_to = models.ForeignKey(
+        User,
+        related_name="following",
+        on_delete=models.CASCADE
+    )
+    followed = models.DateTimeField(auto_now_add=True,
+                                    db_index=True)
+    
+    class Meta:
+        ordering = ('-followed',)
+
+    def __str__(self):
+        return '{} follows {}'.format(self.user_from,
+                                      self.user_to)
