@@ -135,7 +135,7 @@ class CommentRanking(APIView):
         if comments:
             comment_serializer = CommentSerializer(comments, many=True)
             return Response(comment_serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def ranking_like(request, uuid, action):
@@ -160,3 +160,4 @@ def ranking_like(request, uuid, action):
                 ranking.dislikes.add(user)
                 DisLike.objects.create(user=user, ranking=ranking)
             return Response(data_, status=status.HTTP_200_OK)
+

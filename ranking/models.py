@@ -106,7 +106,7 @@ class Comment(models.Model):
         ordering = ('-created_at',)
 
     def __str__(self):
-        return '{{self.user}} commented {{self.ranking}}'
+        return '{} commented {}'.format(self.user, self.ranking)
 
     
 class Like(models.Model):
