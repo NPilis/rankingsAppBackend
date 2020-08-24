@@ -13,4 +13,5 @@ urlpatterns = [
     path('public/', views.RankingPublicList.as_view(), name='user-create'),
     path('create/', views.CreateRanking.as_view(), name="create-ranking"),
     path('<uuid:uuid>/comment/', views.CommentRanking.as_view(), name='ranking-comment'),
+    path('<uuid:uuid>/<str:action>/', views.ranking_like, name='ranking-like')
 ]
