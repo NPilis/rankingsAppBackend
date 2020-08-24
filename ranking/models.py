@@ -1,11 +1,12 @@
-from django.db import models
+import uuid
+
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import IntegrityError, models
 from django.urls import reverse
 from django.utils.text import slugify
-from django.contrib.auth import get_user_model
+
 from .filters import does_title_exist
-from django.db import IntegrityError
-import uuid
 
 UserModel = get_user_model()
 

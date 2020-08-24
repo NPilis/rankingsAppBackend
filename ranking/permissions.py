@@ -9,7 +9,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             # if obj.status == "public":
             #     return True
-            # else:
+            # else: 
             #     if obj.author == request.user:
             #         return False
             #     else:

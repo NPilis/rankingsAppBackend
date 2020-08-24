@@ -1,28 +1,27 @@
 # Ranking App
-from ranking.models import Ranking, RankingPosition, Comment, Like, DisLike
-from ranking.serializers import (
-    RankingPositionSerializer,
-    RankingListSerializer,
-    TopThreeRankingSerializer,
-    RankingCreateUpdateSerializer,
-    CommentSerializer
-    )
-
+from django.contrib.auth.decorators import (permission_required,
+                                            user_passes_test)
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
+from ranking.models import Comment, DisLike, Like, Ranking, RankingPosition
+from ranking.serializers import (CommentSerializer,
+                                 RankingCreateUpdateSerializer,
+                                 RankingListSerializer,
+                                 RankingPositionSerializer,
+                                 TopThreeRankingSerializer)
 # REST FRAMEWORK
 from rest_framework import generics, status
-from rest_framework.generics import RetrieveAPIView, CreateAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.generics import CreateAPIView, RetrieveAPIView
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.http import JsonResponse
-from rest_framework.decorators import permission_classes, api_view
+
 from .permissions import IsOwnerOrReadOnly
 
-from django.contrib.auth.decorators import permission_required
-from django.contrib.auth.decorators import user_passes_test
 
 class CurrentRanking(APIView):
     def get(self, request, pk):
@@ -163,4 +162,3 @@ def ranking_like(request, uuid, action):
                 return Response({"status": "Ranking Disliked"}, status=status.HTTP_200_OK)
         else:
             return Response({"status": "bad request"}, status=status.HTTP_400_BAD_REQUEST)
-

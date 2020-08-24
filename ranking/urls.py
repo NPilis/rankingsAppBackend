@@ -1,6 +1,8 @@
-from ranking.models import Ranking, RankingPosition
 # from .views import CurrentRanking, CreateRanking, RankingPublicList, RankingPrivateList, RankingDetail
 from django.urls import path
+
+from ranking.models import Ranking, RankingPosition
+
 from . import views
 
 app_name = 'rankings'
