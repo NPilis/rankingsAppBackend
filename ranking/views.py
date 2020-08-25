@@ -23,15 +23,6 @@ from rest_framework.views import APIView
 from .permissions import IsOwnerOrReadOnly
 
 
-class CurrentRanking(APIView):
-    def get(self, request, pk):
-        try: 
-            ranking = Ranking.objects.get(pk=pk)
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = RankingListSerializer(ranking)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
 class CreateRanking(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -141,24 +132,36 @@ def ranking_like(request, uuid, action):
     if request.method == 'POST':
         ranking = get_object_or_404(Ranking, uuid=uuid)
         user = request.user
-        data_ = {'data': 'test'}
         if action == 'like':
             if user in ranking.likes.all():
-                ranking.likes.remove(user)
                 Like.objects.get(user=user, ranking=ranking).delete()
                 return Response({"status": "Like removed"}, status=status.HTTP_200_OK)
             else:
-                ranking.likes.add(user)
                 Like.objects.create(user=user, ranking=ranking)
                 return Response({"status": "Ranking Liked"}, status=status.HTTP_200_OK)
         elif action == 'dislike':
             if user in ranking.dislikes.all():
-                ranking.dislikes.remove(user)
                 DisLike.objects.get(user=user, ranking=ranking).delete()
                 return Response({"status": "Dislike removed"}, status=status.HTTP_200_OK)
             else:
-                ranking.dislikes.add(user)
                 DisLike.objects.create(user=user, ranking=ranking)
                 return Response({"status": "Ranking Disliked"}, status=status.HTTP_200_OK)
         else:
             return Response({"status": "bad request"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST','GET'])
+@permission_classes([IsOwnerOrReadOnly, IsAuthenticated])
+def add_position(request, uuid):
+    if request.method == "POST":
+        ranking = get_object_or_404(Ranking, uuid=uuid)
+        user = request.user
+        if ranking.author == user:
+            # request.data.update({"ranking": ranking.pk})
+            rp_serializer = RankingPositionSerializer(data=request.data)
+            if rp_serializer.is_valid():
+                rp_serializer.save()
+                return Response({"done": "done"})
+            return Response(rp_serializer.errors)
+    if request.method == "GET":
+        return Response({"done": "done"})

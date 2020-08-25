@@ -8,6 +8,10 @@ class RankingPositionSerializer(serializers.ModelSerializer):
         model = RankingPosition
         fields = ['title', 'ranking', 'description', 'position', 'image']
         read_only_fields = ['ranking']
+    
+    def create(self, validated_data):
+        ranking_position = RankingPosition.objects.create(ranking=ranking, **validated_data)
+        return ranking_position
 
 class RankingCreateUpdateSerializer(serializers.ModelSerializer):
     ranking_positions = RankingPositionSerializer(many=True)
@@ -53,7 +57,6 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ['reply_to', 'created_at', 'edited_at']
 
     def create(self, validated_data):
-        print(validated_data)
         ranking = validated_data.pop('ranking')
         user = validated_data.pop('user')
         comment = Comment.objects.create(user=user, ranking=ranking, **validated_data)

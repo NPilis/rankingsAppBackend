@@ -114,7 +114,33 @@ class Like(models.Model):
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     ranking = models.ForeignKey(Ranking, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return '{} likes {}'.format(self.user.username, self.ranking.title)
+    
+    def save(self, *args, **kwargs):
+        self.ranking.likes.add(self.user)
+        super(Like, self).save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        self.ranking.likes.remove(self.user)
+        super(Like, self).delete(*args, **kwargs)
 
 class DisLike(models.Model):
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     ranking = models.ForeignKey(Ranking, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '{} dislikes {}'.format(self.user.username, self.ranking.title)
+
+    def save(self, *args, **kwargs):
+        self.ranking.dislikes.add(self.user)
+        super(DisLike, self).save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        self.ranking.dislikes.remove(self.user)
+        super(DisLike, self).delete(*args, **kwargs)
+
+        
+# class Share(models.Model):
+#     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+#     ranking = models.ForeignKey(Ranking, on_delete=models.CASCADE)
