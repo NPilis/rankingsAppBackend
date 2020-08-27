@@ -1,5 +1,6 @@
 from .models import Ranking, RankingPosition, Comment
 from rest_framework import serializers
+from django.shortcuts import get_object_or_404
 
 
 class RankingPositionSerializer(serializers.ModelSerializer):
@@ -7,11 +8,7 @@ class RankingPositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = RankingPosition
         fields = ['title', 'ranking', 'description', 'position', 'image']
-        read_only_fields = ['ranking']
-    
-    def create(self, validated_data):
-        ranking_position = RankingPosition.objects.create(ranking=ranking, **validated_data)
-        return ranking_position
+        read_only_fields = ['ranking', 'position']
 
 class RankingCreateUpdateSerializer(serializers.ModelSerializer):
     ranking_positions = RankingPositionSerializer(many=True)
@@ -19,9 +16,15 @@ class RankingCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ranking
         fields = ['author', 'title', 'content', 'status', 'image', 'ranking_positions']
-    
+        read_only_fields = ['author']
+
+    #Needs improvement
     def create(self, validated_data):
-        ranking_positions = validated_data.pop('ranking_positions')
+        try:
+            ranking_positions = validated_data.pop('ranking_positions')
+        except KeyError:
+            ranking = Ranking.objects.create(**validated_data)
+            return ranking
         ranking = Ranking.objects.create(**validated_data)
         for rp in ranking_positions:
             RankingPosition.objects.create(ranking=ranking, **rp)
@@ -42,7 +45,7 @@ class TopThreeRankingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ranking
         fields = ['author', 'title', 'created_at', 'likes', 'dislikes', 'total_difference', 'top_three_rp', 'uuid']
-        read_only_fields = ['author', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'top_three_rp']
+        read_only_fields = '__all__'
 
     def get_top_three_rp(self, obj):
         top_three = RankingPosition.objects.filter(ranking=obj)[:3]
@@ -54,10 +57,4 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
-        read_only_fields = ['reply_to', 'created_at', 'edited_at']
-
-    def create(self, validated_data):
-        ranking = validated_data.pop('ranking')
-        user = validated_data.pop('user')
-        comment = Comment.objects.create(user=user, ranking=ranking, **validated_data)
-        return comment
+        read_only_fields = ['reply_to', 'created_at', 'edited_at', 'ranking', 'user']

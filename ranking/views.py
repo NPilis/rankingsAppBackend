@@ -27,10 +27,9 @@ class CreateRanking(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        request.data.update({"author": request.user.pk})
         serializer = RankingCreateUpdateSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(author=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -111,12 +110,9 @@ class CommentRanking(APIView):
         return super(CommentRanking, self).dispatch(request, *args, **kwargs)
     
     def post(self, request, *args, **kwargs):
-        request.data.update({"user": self.user.pk, "ranking": self.ranking.pk})
         serializer = CommentSerializer(data=request.data)
-        print(serializer.is_valid())
         if serializer.is_valid():
-            print(serializer.errors)
-            serializer.save()
+            serializer.save(user=self.user, ranking=self.ranking)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
@@ -125,6 +121,7 @@ class CommentRanking(APIView):
         if comments:
             comment_serializer = CommentSerializer(comments, many=True)
             return Response(comment_serializer.data, status=status.HTTP_200_OK)
+        return Response({"Status": 'No comments found'})
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -157,11 +154,10 @@ def add_position(request, uuid):
         ranking = get_object_or_404(Ranking, uuid=uuid)
         user = request.user
         if ranking.author == user:
-            # request.data.update({"ranking": ranking.pk})
             rp_serializer = RankingPositionSerializer(data=request.data)
             if rp_serializer.is_valid():
-                rp_serializer.save()
-                return Response({"done": "done"})
-            return Response(rp_serializer.errors)
+                rp_serializer.save(ranking=ranking)
+                return Response({"Status": "Position added"})
+        return Response({"Error": "Not an owner"})
     if request.method == "GET":
-        return Response({"done": "done"})
+        return Response({"Status": "In progress.."})
