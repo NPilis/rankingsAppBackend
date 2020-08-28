@@ -1,11 +1,12 @@
 from django.urls import include, path
 from rest_framework import routers
-from user.views import CurrentUser, UsersList, UserCreate
+from user.views import CurrentUser, UsersList, UserCreate, UserDetail
 
-app_name = 'user'
+app_name = 'users'
 
 urlpatterns = [
-    path('', CurrentUser.as_view(), name='current-user'),
-    path('users/', UsersList.as_view(), name='users-list'),
-    path('users/create', UserCreate.as_view(), name='user-create')
+    # path('', CurrentUser.as_view(), name='current-user'),
+    path('', UsersList.as_view(), name='users-list'),
+    path('create', UserCreate.as_view(), name='user-create'),
+    path('<uuid:uuid>/', UserDetail.as_view(), name='user-detail')
 ]

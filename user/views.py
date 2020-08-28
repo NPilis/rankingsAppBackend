@@ -20,9 +20,18 @@ class CurrentUser(APIView):
 class UsersList(APIView):
     def get(self, request, *args, **kwargs):
         q = User.objects.all()
-        serializer = UserSerializer(q, many=True)
+        serializer = UserSerializer(q, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class UserCreate(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+class UserDetail(APIView):
+    def get(self, request, uuid):
+        try:
+            user = User.objects.get(uuid=uuid)
+        except:
+            return Response({"Status": "User does not exist"}, status=HTTP_400_BAD_REQUEST)
+        user_serializer = UserSerializer(user, many=False, context={'request': request})
+        return Response(user_serializer.data, status=status.HTTP_200_OK)

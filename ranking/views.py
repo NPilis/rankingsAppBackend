@@ -19,6 +19,7 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import generics
 
 from .permissions import IsOwnerOrReadOnly
 
@@ -45,7 +46,7 @@ class RankingPrivateList(APIView):
             author=self.user,
             status="private"
             )
-        rank_serializer = TopThreeRankingSerializer(ranks, many=True)
+        rank_serializer = TopThreeRankingSerializer(ranks, many=True, context={'request': request})
         return Response(rank_serializer.data, status=status.HTTP_200_OK)
         
 
@@ -54,7 +55,7 @@ class RankingPublicList(APIView):
 
     def get(self, request, **kwargs):
         ranks = Ranking.objects.filter(status="public")
-        rank_serializer = TopThreeRankingSerializer(ranks, many=True)
+        rank_serializer = TopThreeRankingSerializer(ranks, many=True, context={'request': request})
         return Response(rank_serializer.data, status=status.HTTP_200_OK)
 
 class RankingDetail(APIView):
