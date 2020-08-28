@@ -33,7 +33,8 @@ class RankingCreateUpdateSerializer(serializers.ModelSerializer):
 
 class RankingListSerializer(serializers.ModelSerializer):
     ranking_positions = RankingPositionSerializer(many=True, read_only=True)
-
+    author = UserSerializer(many=False)
+    
     class Meta:
         model = Ranking
         fields = '__all__'

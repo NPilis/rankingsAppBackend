@@ -2,7 +2,7 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from user.models import User, Follow
-from user.serializers import UserSerializer
+from user.serializers import UserSerializer, DetailUserSerializer
 from rest_framework import status, generics
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
@@ -37,7 +37,7 @@ class UserDetail(APIView):
             user = User.objects.get(uuid=uuid)
         except:
             return Response({"Status": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-        user_serializer = UserSerializer(user, many=False, context={'request': request})
+        user_serializer = DetailUserSerializer(user, many=False, context={'request': request})
         return Response(user_serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request, uuid):

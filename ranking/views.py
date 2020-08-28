@@ -75,7 +75,7 @@ class RankingDetail(APIView):
     
     def get(self, request, uuid, *args, **kwargs):
         if self.viewAccess or self.isOwner:
-            serializer = RankingListSerializer(self.ranking)
+            serializer = RankingListSerializer(self.ranking, context={'request':request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'No access'}, status=status.HTTP_400_BAD_REQUEST)
