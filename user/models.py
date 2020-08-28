@@ -24,6 +24,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         db_index=True
     )
+    following = models.ManyToManyField('self',
+                                       through='Follow',
+                                       related_name='followers',
+                                       symmetrical=False)
 
     USERNAME_FIELD = 'email'
 
@@ -32,22 +36,25 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.username
 
-    def get_followers(self):
-        followers = Follow.objects.filter(user_to=self.user)
-        return followers
+    # @property
+    # def get_followers(self):
+    #     followers = Follow.objects.filter(user_to=self)
+    #     return followers
     
-    def get_following(self):
-        followed_users = Follow.objects.filter(user_from=self.user)
+    # @property
+    # def get_following(self):
+    #     followed_users = Follow.objects.filter(user_from=self)
+    #     return followed_users
 
 class Follow(models.Model):
     user_from = models.ForeignKey(
         User,
-        related_name="follow_creator",
+        related_name="rel_from",
         on_delete=models.CASCADE
     )
     user_to = models.ForeignKey(
         User,
-        related_name="following",
+        related_name="rel_to",
         on_delete=models.CASCADE
     )
     followed = models.DateTimeField(auto_now_add=True,
