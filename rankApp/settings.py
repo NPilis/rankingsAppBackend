@@ -21,7 +21,6 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 with open('../../secret.txt') as f:
     SECRET_KEY = f.read().strip()
-    
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

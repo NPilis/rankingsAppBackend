@@ -87,26 +87,26 @@ class DeleteRanking(generics.DestroyAPIView):
     lookup_field = 'uuid'
     queryset = Ranking.objects.all()
 
-class CommentRanking(APIView):
+class RankingComments(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = ''
+    serializer_class = CommentSerializer
 
     def dispatch(self, request, *args, **kwargs):
         self.ranking = filters.get_ranking(kwargs['uuid'])
-        self.user = request.user
-        return super(CommentRanking, self).dispatch(request, *args, **kwargs)
+        return super(RankingComments, self).dispatch(request, *args, **kwargs)
+
+    def list(self, request, *args, **kwargs):
+        ranking_comments = self.ranking.ranking_comments.all()
+        # ranking_comments = Comment.objects.filter(ranking=self.ranking)
+        if len(ranking_comments) > 0:
+            page = self.paginate_queryset(ranking_comments)
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        return Response({"STATUS": "No comments at this moment"}, status=status.HTTP_204_NO_CONTENT)
     
-    def post(self, request, *args, **kwargs):
-        serializer = CommentSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=self.user, ranking=self.ranking)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-    
-    def get(self, request, *args, **kwargs):
-        comments = Comment.objects.filter(ranking=self.ranking)
-        if comments:
-            comment_serializer = CommentSerializer(comments, many=True)
-            return Response(comment_serializer.data, status=status.HTTP_200_OK)
-        return Response({"Status": 'No comments found'})
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user, ranking=self.ranking)
 
 class RankingLike(APIView):
     permission_classes = [permissions.IsAuthenticated,]

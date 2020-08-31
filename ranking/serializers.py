@@ -36,7 +36,7 @@ class RankingDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Ranking
-        fields = '__all__'
+        fields = ['title', 'author', 'likes', 'dislikes', 'total_difference', 'ranking_positions']
         read_only_fields = ['author', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'ranking_positions']
 
 class TopThreeRankingSerializer(serializers.ModelSerializer):
@@ -56,8 +56,15 @@ class TopThreeRankingSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(many=False, read_only=True)
+    ranking = serializers.HyperlinkedRelatedField(
+        many=False,
+        read_only=True,
+        view_name='rankings:ranking-detail',
+        lookup_field = 'uuid'
+    )
 
     class Meta:
         model = Comment
         fields = '__all__'
-        read_only_fields = ['reply_to', 'created_at', 'edited_at', 'ranking', 'user']
+        read_only_fields = ['created_at', 'edited_at', 'ranking', 'user', 'active']

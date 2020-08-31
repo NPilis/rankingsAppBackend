@@ -47,6 +47,18 @@ class Ranking(models.Model):
         related_name='dislikes',
         blank=True
     )
+    comments = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='comments',
+        blank=True,
+        through='Comment'
+    )
+    shares = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='shares',
+        blank=True,
+        through='Share'
+    )
     total_difference = models.IntegerField(default=0, blank=True)
 
     class Meta:
@@ -76,19 +88,19 @@ class RankingPosition(models.Model):
         super(RankingPosition, self).save(*args, **kwargs)
 
     class Meta:
-        ordering = ('ranking','position')
+        ordering = ('ranking', 'position')
 
 class Comment(models.Model):
 
     ranking = models.ForeignKey(
         Ranking,
         on_delete=models.CASCADE,
-        related_name="comments",
+        related_name="ranking_comments",
     )
     user = models.ForeignKey(
         UserModel,
         on_delete=models.CASCADE,
-        related_name="comments",
+        related_name="user_comments",
     )
     reply_to = models.ForeignKey(
         'self',
