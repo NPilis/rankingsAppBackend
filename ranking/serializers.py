@@ -10,8 +10,8 @@ class RankingPositionSerializer(serializers.ModelSerializer):
         fields = ['title', 'ranking', 'description', 'position', 'image']
         read_only_fields = ['ranking', 'position']
 
-class RankingCreateUpdateSerializer(serializers.ModelSerializer):
-    ranking_positions = RankingPositionSerializer(many=True)
+class RankingSerializer(serializers.ModelSerializer):
+    ranking_positions = RankingPositionSerializer(many=True, required=False)
 
     class Meta:
         model = Ranking
@@ -30,8 +30,7 @@ class RankingCreateUpdateSerializer(serializers.ModelSerializer):
             RankingPosition.objects.create(ranking=ranking, **rp)
         return ranking
 
-
-class RankingListSerializer(serializers.ModelSerializer):
+class RankingDetailSerializer(serializers.ModelSerializer):
     ranking_positions = RankingPositionSerializer(many=True, read_only=True)
     author = UserSerializer(many=False)
     

@@ -6,8 +6,6 @@ from django.db import IntegrityError, models
 from django.urls import reverse
 from django.utils.text import slugify
 
-from .filters import does_title_exist
-
 UserModel = get_user_model()
 
 class Ranking(models.Model):
@@ -17,7 +15,8 @@ class Ranking(models.Model):
     )
     author = models.ForeignKey(
         UserModel,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='rankings'
     )
     title = models.CharField(max_length=40)
     content = models.CharField(
@@ -141,6 +140,10 @@ class DisLike(models.Model):
         super(DisLike, self).delete(*args, **kwargs)
 
         
-# class Share(models.Model):
-#     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
-#     ranking = models.ForeignKey(Ranking, on_delete=models.CASCADE)
+class Share(models.Model):
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    ranking = models.ForeignKey(Ranking, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '{} shared {}'.format(self.user.username, self.ranking.title)
+    

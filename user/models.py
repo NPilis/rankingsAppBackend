@@ -36,16 +36,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.username
 
-    # @property
-    # def get_followers(self):
-    #     followers = Follow.objects.filter(user_to=self)
-    #     return followers
-    
-    # @property
-    # def get_following(self):
-    #     followed_users = Follow.objects.filter(user_from=self)
-    #     return followed_users
-
 class Follow(models.Model):
     user_from = models.ForeignKey(
         User,

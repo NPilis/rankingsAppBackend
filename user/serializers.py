@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 class UserSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='users:user-detail',
-                                            lookup_field='uuid')
+                                               lookup_field='uuid')
 
     class Meta:
         model = User
@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class DetailUserSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='users:user-detail',
-                                            lookup_field='uuid')
+                                               lookup_field='uuid')
     # followers = serializers.HyperlinkedIdentityField(many=True,
     #                                                  view_name='users:user-detail',
     #                                                  lookup_field='uuid')
