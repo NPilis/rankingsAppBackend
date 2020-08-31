@@ -14,3 +14,13 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 class IsOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.author == request.user
+
+class IsAccesableForCurrentUser(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if obj.status == "private":
+            if obj.author == request.user:
+                return True
+            else:
+                return False
+        else:
+            return True

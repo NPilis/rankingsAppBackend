@@ -21,7 +21,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework import permissions
-from .permissions import IsOwnerOrReadOnly, IsOwner
+from .permissions import IsOwnerOrReadOnly, IsOwner, IsAccesableForCurrentUser
 from . import filters
 
 class PrivateRankings(generics.ListAPIView):
@@ -54,18 +54,16 @@ class PublicRankings(generics.ListAPIView):
             return self.get_paginated_response(serializer.data)
         return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
 
-
 class RankingDetail(generics.RetrieveAPIView):
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsAccesableForCurrentUser]
     lookup_field = 'uuid'
     serializer_class = RankingDetailSerializer
+    queryset = ''
 
-    def get(self, request, *args, **kwargs):
-        ranking = filters.get_ranking(kwargs['uuid'])
-        serializer = self.get_serializer(ranking, 
-                                         many=False,
-                                         context={'request':request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_object(self):
+        ranking = filters.get_ranking(self.kwargs['uuid'])
+        self.check_object_permissions(self.request, ranking)
+        return ranking
 
 class CreateRanking(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
