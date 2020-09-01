@@ -10,12 +10,12 @@ class RankingPositionSerializer(serializers.ModelSerializer):
         fields = ['title', 'ranking', 'description', 'position', 'image']
         read_only_fields = ['ranking', 'position']
 
-class RankingSerializer(serializers.ModelSerializer):
+class RankingCreateSerializer(serializers.ModelSerializer):
     ranking_positions = RankingPositionSerializer(many=True, required=False)
 
     class Meta:
         model = Ranking
-        fields = ['author', 'title', 'content', 'status', 'image', 'ranking_positions']
+        fields = ['title', 'content', 'status', 'image', 'ranking_positions']
         read_only_fields = ['author']
 
     #Needs improvement
@@ -30,16 +30,26 @@ class RankingSerializer(serializers.ModelSerializer):
             RankingPosition.objects.create(ranking=ranking, **rp)
         return ranking
 
+class RankingEditSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Ranking
+        fields = ['title', 'content', 'status', 'image']
+
 class RankingDetailSerializer(serializers.ModelSerializer):
     ranking_positions = RankingPositionSerializer(many=True, read_only=True)
     author = UserSerializer(many=False)
     
     class Meta:
         model = Ranking
-        fields = ['title', 'author', 'likes', 'dislikes', 'total_difference', 'ranking_positions']
+        fields = ['title', 'content', 'author', 'likes', 'dislikes', 'total_difference', 'ranking_positions', 'status']
         read_only_fields = ['author', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'ranking_positions']
 
+
 class TopThreeRankingSerializer(serializers.ModelSerializer):
+    """
+        Used for list views when only top three ranking posisions are needed.
+    """
     top_three_rp = serializers.SerializerMethodField()
     author = UserSerializer(many=False)
     url = serializers.HyperlinkedIdentityField(view_name='rankings:ranking-detail',

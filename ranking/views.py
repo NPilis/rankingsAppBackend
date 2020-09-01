@@ -6,10 +6,11 @@ from django.shortcuts import get_object_or_404
 
 from ranking.models import Comment, DisLike, Like, Ranking, RankingPosition
 from ranking.serializers import (CommentSerializer,
-                                 RankingSerializer,
+                                 RankingCreateSerializer,
                                  RankingDetailSerializer,
                                  RankingPositionSerializer,
-                                 TopThreeRankingSerializer)
+                                 TopThreeRankingSerializer,
+                                 RankingEditSerializer)
 # REST FRAMEWORK
 from rest_framework import generics, status
 from rest_framework.authentication import TokenAuthentication
@@ -23,6 +24,7 @@ from rest_framework import generics
 from rest_framework import permissions
 from .permissions import IsOwnerOrReadOnly, IsOwner, IsAccesableForCurrentUser
 from . import filters
+from rest_framework import mixins
 
 class PrivateRankings(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -67,7 +69,7 @@ class RankingDetail(generics.RetrieveAPIView):
 
 class CreateRanking(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = RankingSerializer
+    serializer_class = RankingCreateSerializer
     queryset = ''
 
     def create(self, request, *args, **kwargs):
@@ -84,6 +86,16 @@ class DeleteRanking(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwner]
     lookup_field = 'uuid'
     queryset = Ranking.objects.all()
+
+class EditRanking(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsOwner]
+    lookup_field = 'uuid'
+    serializer_class = RankingEditSerializer
+
+    def get_object(self):
+        ranking = filters.get_ranking(self.kwargs['uuid'])
+        self.check_object_permissions(self.request,ranking)
+        return ranking
 
 class RankingComments(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -146,84 +158,47 @@ class RankingDisLike(APIView):
             DisLike.objects.create(user=self.user, ranking=self.ranking)
             return Response({"STATUS": "Ranking disliked"}, status=status.HTTP_200_OK)
 
+class RankingPositionsCreate(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = RankingPositionSerializer
+    queryset = ''
 
-@api_view(['POST'])
-@permission_classes([IsOwnerOrReadOnly, IsAuthenticated])
-def add_position(request, uuid):
-    if request.method == "POST":
-        ranking = get_object_or_404(Ranking, uuid=uuid)
-        user = request.user
-        if ranking.author == user:
-            rp_serializer = RankingPositionSerializer(data=request.data)
-            if rp_serializer.is_valid():
-                rp_serializer.save(ranking=ranking)
-                return Response({"Status": "Position added"})
-        return Response({"Error": "Not an owner"})
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def ranking_like(request, uuid, action):
-#     if request.method == 'POST':
-#         ranking = get_object_or_404(Ranking, uuid=uuid)
-#         user = request.user
-#         if action == 'like':
-#             if user in ranking.likes.all():
-#                 Like.objects.get(user=user, ranking=ranking).delete()
-#                 return Response({"status": "Like removed"}, status=status.HTTP_200_OK)
-#             else:
-#                 Like.objects.create(user=user, ranking=ranking)
-#                 return Response({"status": "Ranking Liked"}, status=status.HTTP_200_OK)
-#         elif action == 'dislike':
-#             if user in ranking.dislikes.all():
-#                 DisLike.objects.get(user=user, ranking=ranking).delete()
-#                 return Response({"status": "Dislike removed"}, status=status.HTTP_200_OK)
-#             else:
-#                 DisLike.objects.create(user=user, ranking=ranking)
-#                 return Response({"status": "Ranking Disliked"}, status=status.HTTP_200_OK)
-#         else:
-#             return Response({"status": "bad request"}, status=status.HTTP_400_BAD_REQUEST)
-
-# class RankingDetail(APIView):
-#     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-
-#     def dispatch(self, request, *args, **kwargs):
-#         self.viewAccess = False
-#         self.isOwner = False
-#         self.user = request.user
-#         self.ranking = get_object_or_404(Ranking, uuid=kwargs.get('uuid'))
-#         if self.ranking.status == 'public':
-#             self.viewAccess = True
-#         if self.ranking.author == self.user:
-#             self.isOwner = True
-        
-#         return super(RankingDetail, self).dispatch(request, *args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        self.ranking = filters.get_ranking(kwargs['uuid'])
+        self.ranking_positions = self.ranking.ranking_positions.all()
+        return super().dispatch(request, *args, **kwargs)
     
-#     def get(self, request, uuid, *args, **kwargs):
-#         if self.viewAccess or self.isOwner:
-#             serializer = RankingDetailSerializer(self.ranking, context={'request':request})
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         else:
-#             return Response({'error': 'No access'}, status=status.HTTP_400_BAD_REQUEST)
+    def list(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.ranking_positions, many=True)
+        return Response(serializer.data)
 
-#     def post(self, request, uuid, *args, **kwargs):
-#         if self.isOwner:
-#             serializer = RankingSerializer(data=request.data)
-#             if serializer.is_valid():
-#                 serializer.save()
-#                 return Response(serializer.data, status=status.HTTP_200_OK)
-#         return Response({'error': 'Not an owner'}, status=status.HTTP_400_BAD_REQUEST)
+    def perform_create(self, serializer):
+        serializer.save(ranking=self.ranking)
 
-#     def put(self, request, *args, **kwargs):
-#         if self.isOwner:
-#             serializer = RankingSerializer(self.ranking, data=request.data)
-#             if serializer.is_valid():
-#                 serializer.save()
-#                 return Response(serializer.data, status=status.HTTP_200_OK)
-#         return Response({'error': 'Not an owner'}, status=status.HTTP_400_BAD_REQUEST)
+class RankingPositionDelete(generics.DestroyAPIView):
+    permission_classes = [IsOwner]
+    queryset = ''
+    serializer_class = RankingPositionSerializer
 
-#     def delete(self, request, *args, **kwargs):
-#         if self.isOwner:
-#             self.ranking.delete()
-#             return Response(status=status.HTTP_200_OK)
-#         return Response({'error': 'Not an owner'}, status=status.HTTP_400_BAD_REQUEST)
+    def dispatch(self, request, *args, **kwargs):
+        self.ranking = filters.get_ranking(kwargs['uuid'])
+        self.ranking_positions = self.ranking.ranking_positions.all()
+        self.ranking_position = filters.get_ranking_position(self.ranking_positions, kwargs['position'])
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_object(self):
+        obj = self.ranking
+        self.check_object_permissions(self.request, obj)
+        return obj
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.ranking_position
+        self.perform_destroy(instance, kwargs['position'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance, position):
+        positions_to_update = self.ranking_positions[position-1:]
+        for pos in positions_to_update:
+            pos.position -= 1
+            pos.save(isDeleted=True)
+        instance.delete()

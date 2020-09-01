@@ -19,3 +19,9 @@ def get_dislike_if_exist(ranking, user):
     except DisLike.DoesNotExist:
         return False
     return dislike
+
+def get_ranking_position(query, position):
+    try:
+        return query.get(position=position)
+    except RankingPosition.DoesNotExist:
+        return None

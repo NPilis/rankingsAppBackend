@@ -81,10 +81,11 @@ class RankingPosition(models.Model):
     def __str__(self):
         return self.title
 
-    def save(self, *args, **kwargs):
-        ranking_positions = RankingPosition.objects.filter(ranking=self.ranking)
-        if ranking_positions:
-            self.position = RankingPosition.objects.filter(ranking=self.ranking).last().position + 1
+    def save(self, isDeleted=False, *args, **kwargs):
+        if not isDeleted:
+            ranking_positions = self.ranking.ranking_positions.all()
+            if ranking_positions:
+                self.position = ranking_positions.last().position + 1
         super(RankingPosition, self).save(*args, **kwargs)
 
     class Meta:
