@@ -81,8 +81,8 @@ class RankingPosition(models.Model):
     def __str__(self):
         return self.title
 
-    def save(self, isDeleted=False, *args, **kwargs):
-        if not isDeleted:
+    def save(self, *args, **kwargs):
+        if not self.pk:
             ranking_positions = self.ranking.ranking_positions.all()
             if ranking_positions:
                 self.position = ranking_positions.last().position + 1

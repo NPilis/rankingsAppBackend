@@ -1,10 +1,11 @@
 from ranking.models import Ranking, RankingPosition, Like, DisLike
+from django.http import Http404
 
 def get_ranking(ranking_uuid):
     try:
         return Ranking.objects.get(uuid=ranking_uuid)
     except Ranking.DoesNotExist:
-        return None
+        raise Http404("Ranking does not exist.")
 
 def get_like_if_exist(ranking, user):
     try:
@@ -24,4 +25,4 @@ def get_ranking_position(query, position):
     try:
         return query.get(position=position)
     except RankingPosition.DoesNotExist:
-        return None
+        raise Http404("Ranking position does not exist.")

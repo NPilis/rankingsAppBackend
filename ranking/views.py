@@ -5,14 +5,13 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
 from ranking.models import Comment, DisLike, Like, Ranking, RankingPosition
-from ranking.serializers import (CommentSerializer,
-                                 RankingCreateSerializer,
+from ranking.serializers import (CommentSerializer, RankingCreateSerializer,
                                  RankingDetailSerializer,
+                                 RankingEditSerializer,
                                  RankingPositionSerializer,
-                                 TopThreeRankingSerializer,
-                                 RankingEditSerializer)
+                                 TopThreeRankingSerializer)
 # REST FRAMEWORK
-from rest_framework import generics, status
+from rest_framework import generics, mixins, permissions, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import CreateAPIView, RetrieveAPIView
@@ -20,11 +19,10 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import generics
-from rest_framework import permissions
-from .permissions import IsOwnerOrReadOnly, IsOwner, IsAccesableForCurrentUser
+
 from . import filters
-from rest_framework import mixins
+from .permissions import IsAccesableForCurrentUser, IsOwnerOfPosition, IsOwnerOrReadOnly, IsOwnerOfRanking
+
 
 class PrivateRankings(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -42,7 +40,6 @@ class PrivateRankings(generics.ListAPIView):
             return self.get_paginated_response(serializer.data)
         return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
         
-
 class PublicRankings(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = TopThreeRankingSerializer
@@ -58,9 +55,7 @@ class PublicRankings(generics.ListAPIView):
 
 class RankingDetail(generics.RetrieveAPIView):
     permission_classes = [IsAccesableForCurrentUser]
-    lookup_field = 'uuid'
     serializer_class = RankingDetailSerializer
-    queryset = ''
 
     def get_object(self):
         ranking = filters.get_ranking(self.kwargs['uuid'])
@@ -70,94 +65,28 @@ class RankingDetail(generics.RetrieveAPIView):
 class CreateRanking(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = RankingCreateSerializer
-    queryset = ''
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
     def perform_create(self, serializer):
         new_ranking = serializer.save(author=self.request.user)
 
 class DeleteRanking(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated, IsOwner]
-    lookup_field = 'uuid'
-    queryset = Ranking.objects.all()
+    permission_classes = [IsAuthenticated, IsOwnerOfRanking]
+
+    def get_object(self):
+        ranking = filters.get_ranking(self.kwargs['uuid'])
+        self.check_object_permissions(self.request, ranking)
+        return ranking
 
 class EditRanking(generics.RetrieveUpdateAPIView):
-    permission_classes = [IsOwner]
-    lookup_field = 'uuid'
+    permission_classes = [IsOwnerOfRanking]
     serializer_class = RankingEditSerializer
 
     def get_object(self):
         ranking = filters.get_ranking(self.kwargs['uuid'])
-        self.check_object_permissions(self.request,ranking)
+        self.check_object_permissions(self.request, ranking)
         return ranking
 
-class RankingComments(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    queryset = ''
-    serializer_class = CommentSerializer
-
-    def dispatch(self, request, *args, **kwargs):
-        self.ranking = filters.get_ranking(kwargs['uuid'])
-        return super(RankingComments, self).dispatch(request, *args, **kwargs)
-
-    def list(self, request, *args, **kwargs):
-        ranking_comments = self.ranking.ranking_comments.all()
-        # ranking_comments = Comment.objects.filter(ranking=self.ranking)
-        if len(ranking_comments) > 0:
-            page = self.paginate_queryset(ranking_comments)
-            serializer = self.get_serializer(page, many=True, context={'request': request})
-            return self.get_paginated_response(serializer.data)
-        return Response({"STATUS": "No comments at this moment"}, status=status.HTTP_204_NO_CONTENT)
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user, ranking=self.ranking)
-
-class RankingLike(APIView):
-    permission_classes = [permissions.IsAuthenticated,]
-    
-    def dispatch(self, request, *args, **kwargs):
-        self.ranking = filters.get_ranking(kwargs['uuid'])
-        self.user = request.user
-        return super().dispatch(request, *args, **kwargs)
-    
-    def post(self, request, *args, **kwargs):
-        curr_like = filters.get_like_if_exist(self.ranking, self.user)
-        curr_dislike = filters.get_dislike_if_exist(self.ranking, self.user)
-        if curr_like:
-            curr_like.delete()
-            return Response({"STATUS": "Ranking unliked"}, status=status.HTTP_200_OK)
-        else:
-            if curr_dislike:
-                curr_dislike.delete()
-            Like.objects.create(user=self.user, ranking=self.ranking)
-            return Response({"STATUS": "Ranking liked"}, status=status.HTTP_200_OK)
-
-class RankingDisLike(APIView):
-    permission_classes = [permissions.IsAuthenticated,]
-    
-    def dispatch(self, request, *args, **kwargs):
-        self.ranking = filters.get_ranking(kwargs['uuid'])
-        self.user = request.user
-        return super().dispatch(request, *args, **kwargs)
-    
-    def post(self, request, *args, **kwargs):
-        curr_like = filters.get_like_if_exist(self.ranking, self.user)
-        curr_dislike = filters.get_dislike_if_exist(self.ranking, self.user)
-        if curr_dislike:
-            curr_dislike.delete()
-            return Response({"STATUS": "Ranking dislike removed"}, status=status.HTTP_200_OK)
-        else:
-            if curr_like:
-                curr_like.delete()
-            DisLike.objects.create(user=self.user, ranking=self.ranking)
-            return Response({"STATUS": "Ranking disliked"}, status=status.HTTP_200_OK)
-
+# Needs improvement on permissions
 class RankingPositionsCreate(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = RankingPositionSerializer
@@ -175,8 +104,9 @@ class RankingPositionsCreate(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(ranking=self.ranking)
 
+# Needs improvement in dispatch and get_object methods
 class RankingPositionDelete(generics.DestroyAPIView):
-    permission_classes = [IsOwner]
+    permission_classes = [IsOwnerOfRanking]
     queryset = ''
     serializer_class = RankingPositionSerializer
 
@@ -200,5 +130,75 @@ class RankingPositionDelete(generics.DestroyAPIView):
         positions_to_update = self.ranking_positions[position-1:]
         for pos in positions_to_update:
             pos.position -= 1
-            pos.save(isDeleted=True)
+            pos.save()
         instance.delete()
+
+class RankingPositionUpdate(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsOwnerOfPosition]
+    serializer_class = RankingPositionSerializer
+    
+    def get_object(self):
+        ranking_obj = filters.get_ranking(self.kwargs['uuid'])
+        position_obj = filters.get_ranking_position(ranking_obj.ranking_positions.all(), self.kwargs['position'])
+        self.check_object_permissions(self.request, position_obj)
+        return position_obj
+
+class RankingComments(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = ''
+    serializer_class = CommentSerializer
+
+    def dispatch(self, request, *args, **kwargs):
+        self.ranking = filters.get_ranking(kwargs['uuid'])
+        return super(RankingComments, self).dispatch(request, *args, **kwargs)
+
+    def list(self, request, *args, **kwargs):
+        ranking_comments = self.ranking.ranking_comments.all()
+        if len(ranking_comments) > 0:
+            page = self.paginate_queryset(ranking_comments)
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        return Response({"STATUS": "No comments at this moment"}, status=status.HTTP_204_NO_CONTENT)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user, ranking=self.ranking)
+
+class RankingLike(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.ranking = filters.get_ranking(kwargs['uuid'])
+        self.user = request.user
+        return super().dispatch(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        curr_like = filters.get_like_if_exist(self.ranking, self.user)
+        curr_dislike = filters.get_dislike_if_exist(self.ranking, self.user)
+        if curr_like:
+            curr_like.delete()
+            return Response({"STATUS": "Ranking unliked"}, status=status.HTTP_200_OK)
+        else:
+            if curr_dislike:
+                curr_dislike.delete()
+            Like.objects.create(user=self.user, ranking=self.ranking)
+            return Response({"STATUS": "Ranking liked"}, status=status.HTTP_200_OK)
+
+class RankingDisLike(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.ranking = filters.get_ranking(kwargs['uuid'])
+        self.user = request.user
+        return super().dispatch(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        curr_like = filters.get_like_if_exist(self.ranking, self.user)
+        curr_dislike = filters.get_dislike_if_exist(self.ranking, self.user)
+        if curr_dislike:
+            curr_dislike.delete()
+            return Response({"STATUS": "Ranking dislike removed"}, status=status.HTTP_200_OK)
+        else:
+            if curr_like:
+                curr_like.delete()
+            DisLike.objects.create(user=self.user, ranking=self.ranking)
+            return Response({"STATUS": "Ranking disliked"}, status=status.HTTP_200_OK)
