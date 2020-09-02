@@ -19,11 +19,10 @@ class CurrentUser(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-class UsersList(APIView):
-    def get(self, request, *args, **kwargs):
-        q = User.objects.all()
-        serializer = UserSerializer(q, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class UsersList(generics.ListAPIView):
+    queryset = User.objects.all()
+    permission_classes = [AllowAny]
+    serializer_class = UserSerializer
 
 class UserCreate(generics.CreateAPIView):
     queryset = User.objects.all()
