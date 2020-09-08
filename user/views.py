@@ -9,15 +9,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 
-class CurrentUser(APIView):
-    def get(self, request, format=None):
-        """
-        Return serialized current user.
-        """
-        if request.user:
-            serializer = UserSerializer(request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+class CurrentUser(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = DetailUserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
 
 class UsersList(generics.ListAPIView):
     queryset = User.objects.all()
