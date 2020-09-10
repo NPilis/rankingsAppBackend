@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'rest_auth.registration',
+    'knox',
 
     'user.apps.UserConfig',
     'ranking.apps.RankingConfig',
@@ -63,6 +64,13 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES':[
+        'knox.auth.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication'
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 4
 }
@@ -144,8 +152,6 @@ AUTH_USER_MODEL = 'user.User'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 SITE_ID = 1
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-
 
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:3000",
