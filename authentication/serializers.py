@@ -14,7 +14,7 @@ class LoginSerializer(serializers.Serializer):
                 temp_user = User.objects.get(username=username)
                 username = temp_user.email
             except User.DoesNotExist:
-                raise exceptions.ValidationError('User with this username does not exist')
+                raise exceptions.ValidationError('Incorrect username or password')
 
         if username and password:
             user = authenticate(username=username, password=password)
@@ -34,7 +34,7 @@ class LoginSerializer(serializers.Serializer):
             else:
                 raise serializers.ValidationError("User is not active")
         else:
-            raise serializers.ValidationError("Incorrect Credentials")
+            raise serializers.ValidationError("Incorrect username or password")
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,7 +45,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         username = data.get("username")
         if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError("Username already exists.")
+            raise serializers.ValidationError("User with this username already exists.")
         return data
 
     def create(self, validated_data):
