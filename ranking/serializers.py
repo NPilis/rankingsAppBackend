@@ -54,11 +54,16 @@ class TopThreeRankingSerializer(serializers.ModelSerializer):
     author = UserSerializer(many=False)
     url = serializers.HyperlinkedIdentityField(view_name='rankings:ranking-detail',
                                                lookup_field='uuid')
+    likes = serializers.StringRelatedField(many=True)
+    dislikes = serializers.StringRelatedField(many=True)
+    shares = serializers.StringRelatedField(many=True)
+    comments = serializers.StringRelatedField(many=True)
+
 
     class Meta:
         model = Ranking
-        fields = ['title', 'url', 'author', 'top_three_rp', 'created_at', 'likes', 'dislikes', 'total_difference', 'uuid', 'status']
-        read_only_fields = ['author', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'top_three_rp', 'url', 'uuid', 'status']
+        fields = ['title', 'url', 'author', 'top_three_rp', 'created_at', 'likes', 'dislikes', 'total_difference', 'uuid', 'status', 'shares', 'comments']
+        read_only_fields = ['author', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'top_three_rp', 'url', 'uuid', 'status', 'shares', 'comments']
 
     def get_top_three_rp(self, obj):
         top_three = RankingPosition.objects.filter(ranking=obj)[:3]
