@@ -182,19 +182,15 @@ class RankingLike(APIView):
 class RankingDisLike(APIView):
     permission_classes = [IsAuthenticated]
     
-    def dispatch(self, request, *args, **kwargs):
-        self.ranking = filters.get_ranking(kwargs['uuid'])
-        self.user = request.user
-        return super().dispatch(request, *args, **kwargs)
-    
     def post(self, request, *args, **kwargs):
-        curr_like = filters.get_like_if_exist(self.ranking, self.user)
-        curr_dislike = filters.get_dislike_if_exist(self.ranking, self.user)
+        ranking = filters.get_ranking(kwargs['uuid'])
+        curr_like = filters.get_like_if_exist(ranking, request.user)
+        curr_dislike = filters.get_dislike_if_exist(ranking, request.user)
         if curr_dislike:
             curr_dislike.delete()
             return Response({"STATUS": "Ranking dislike removed"}, status=status.HTTP_200_OK)
         else:
             if curr_like:
                 curr_like.delete()
-            DisLike.objects.create(user=self.user, ranking=self.ranking)
+            DisLike.objects.create(user=request.user, ranking=ranking)
             return Response({"STATUS": "Ranking disliked"}, status=status.HTTP_200_OK)

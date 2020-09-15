@@ -1,4 +1,4 @@
-from .models import Ranking, RankingPosition, Comment
+from .models import Ranking, RankingPosition, Comment, Like
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from user.serializers import UserSerializer
@@ -59,7 +59,6 @@ class TopThreeRankingSerializer(serializers.ModelSerializer):
     shares = serializers.StringRelatedField(many=True)
     comments = serializers.StringRelatedField(many=True)
 
-
     class Meta:
         model = Ranking
         fields = ['title', 'url', 'author', 'top_three_rp', 'created_at', 'likes', 'dislikes', 'total_difference', 'uuid', 'status', 'shares', 'comments']
@@ -68,7 +67,6 @@ class TopThreeRankingSerializer(serializers.ModelSerializer):
     def get_top_three_rp(self, obj):
         top_three = RankingPosition.objects.filter(ranking=obj)[:3]
         return RankingPositionSerializer(top_three, many=True, read_only=True).data
-
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(many=False, read_only=True)
