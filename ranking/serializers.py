@@ -61,8 +61,8 @@ class TopThreeRankingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ranking
-        fields = ['title', 'url', 'author', 'top_three_rp', 'created_at', 'likes', 'dislikes', 'total_difference', 'uuid', 'status', 'shares', 'comments']
-        read_only_fields = ['author', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'top_three_rp', 'url', 'uuid', 'status', 'shares', 'comments']
+        fields = ['title', 'url', 'author', 'top_three_rp', 'created_at', 'likes', 'dislikes', 'total_difference', 'uuid', 'status', 'shares', 'comments', 'image']
+        read_only_fields = ['author', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'top_three_rp', 'url', 'uuid', 'status', 'shares', 'comments', 'image']
 
     def get_top_three_rp(self, obj):
         top_three = RankingPosition.objects.filter(ranking=obj)[:3]
