@@ -10,6 +10,14 @@ class RankingPositionSerializer(serializers.ModelSerializer):
         fields = ['title', 'ranking', 'description', 'position', 'image']
         read_only_fields = ['ranking', 'position']
 
+class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['created_at', 'edited_at', 'ranking', 'user', 'active', 'text']
+        read_only_fields = ['created_at', 'edited_at', 'ranking', 'user', 'active']
+
 class RankingCreateSerializer(serializers.ModelSerializer):
     ranking_positions = RankingPositionSerializer(many=True, required=False)
 
@@ -39,12 +47,14 @@ class RankingEditSerializer(serializers.ModelSerializer):
 class RankingDetailSerializer(serializers.ModelSerializer):
     ranking_positions = RankingPositionSerializer(many=True, read_only=True)
     author = UserSerializer(many=False)
+    likes = serializers.StringRelatedField(many=True)
+    dislikes = serializers.StringRelatedField(many=True)
+    shares = serializers.StringRelatedField(many=True)
     
     class Meta:
         model = Ranking
-        fields = ['title', 'content', 'author', 'likes', 'dislikes', 'comments', 'shares', 'total_difference', 'ranking_positions', 'status', 'image', 'created_at']
-        read_only_fields = ['author', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'ranking_positions', 'image']
-
+        fields = ['title', 'content', 'author', 'likes', 'dislikes', 'ranking_comments', 'shares', 'total_difference', 'ranking_positions', 'status', 'image', 'created_at']
+        read_only_fields = ['author','ranking_comments', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'ranking_positions', 'image']
 
 class TopThreeRankingSerializer(serializers.ModelSerializer):
     """
@@ -67,17 +77,3 @@ class TopThreeRankingSerializer(serializers.ModelSerializer):
     def get_top_three_rp(self, obj):
         top_three = RankingPosition.objects.filter(ranking=obj)[:3]
         return RankingPositionSerializer(top_three, many=True, read_only=True).data
-
-class CommentSerializer(serializers.ModelSerializer):
-    user = UserSerializer(many=False, read_only=True)
-    ranking = serializers.HyperlinkedRelatedField(
-        many=False,
-        read_only=True,
-        view_name='rankings:ranking-detail',
-        lookup_field = 'uuid'
-    )
-
-    class Meta:
-        model = Comment
-        fields = '__all__'
-        read_only_fields = ['created_at', 'edited_at', 'ranking', 'user', 'active']
