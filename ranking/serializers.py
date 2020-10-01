@@ -53,8 +53,8 @@ class RankingDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Ranking
-        fields = ['title', 'content', 'author', 'likes', 'dislikes', 'ranking_comments', 'shares', 'total_difference', 'ranking_positions', 'status', 'image', 'created_at']
-        read_only_fields = ['author','ranking_comments', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'ranking_positions', 'image']
+        fields = ['title', 'content', 'author', 'likes', 'dislikes', 'ranking_comments', 'shares', 'total_difference', 'ranking_positions', 'status', 'image', 'created_at', 'uuid']
+        read_only_fields = ['author','ranking_comments', 'created_at', 'edited_at', 'likes', 'dislikes', 'total_difference', 'ranking_positions', 'image', 'uuid']
 
 class TopThreeRankingSerializer(serializers.ModelSerializer):
     """
