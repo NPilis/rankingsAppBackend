@@ -23,8 +23,8 @@ class RankingCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ranking
-        fields = ['title', 'content', 'status', 'image', 'ranking_positions']
-        read_only_fields = ['author']
+        fields = ['uuid', 'title', 'content', 'status', 'image', 'ranking_positions']
+        read_only_fields = ['author', 'uuid']
 
     #Needs improvement
     def create(self, validated_data):
