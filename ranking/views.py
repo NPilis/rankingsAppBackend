@@ -31,8 +31,7 @@ class PrivateRankings(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         private_rankings = Ranking.objects.filter(
-            author=request.user,
-            status="private"
+            author=request.user
         )
         if len(private_rankings):
             page = self.paginate_queryset(private_rankings)
