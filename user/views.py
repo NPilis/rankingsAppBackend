@@ -28,9 +28,9 @@ class UserCreate(generics.CreateAPIView):
 class UserDetail(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get(self, request, uuid):
+    def get(self, request, username):
         try:
-            user = User.objects.get(uuid=uuid)
+            user = User.objects.get(username=username)
         except:
             return Response({"Status": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         user_serializer = DetailUserSerializer(user, many=False, context={'request': request})
