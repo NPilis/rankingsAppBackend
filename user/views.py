@@ -36,9 +36,9 @@ class UserDetail(APIView):
         user_serializer = DetailUserSerializer(user, many=False, context={'request': request})
         return Response(user_serializer.data, status=status.HTTP_200_OK)
     
-    def post(self, request, uuid):
+    def post(self, request, username):
         user_from = request.user
-        user_to = User.objects.get(uuid=uuid)
+        user_to = User.objects.get(username=username)
         if user_from != user_to:
             if user_from not in user_to.followers.all():
                 Follow.objects.create(user_from=user_from, user_to=user_to)

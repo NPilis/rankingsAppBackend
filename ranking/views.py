@@ -68,6 +68,22 @@ class UserRankings(generics.ListAPIView):
             return self.get_paginated_response(serializer.data)
         return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
 
+class FollowedUsersRankings(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = TopThreeRankingSerializer
+    queryset = ''
+
+    def list(self, request, **kwargs):
+        followed_users = request.user.following.all()
+        followed_users_rankings = Ranking.objects.filter(
+            status="public",
+            author__in=followed_users).order_by('-created_at')
+        if len(followed_users_rankings):
+            page = self.paginate_queryset(followed_users_rankings)
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
+
 class RankingDetail(generics.RetrieveAPIView):
     permission_classes = [IsAccesableForCurrentUser]
     serializer_class = RankingDetailSerializer
