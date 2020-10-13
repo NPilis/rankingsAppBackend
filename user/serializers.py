@@ -26,4 +26,8 @@ class DetailUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['url','email', 'username', 'image', 'is_active', 'following', 'followers', 'uuid', 'date_joined']
 
-        
+class UpdateUserSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = User
+        fields = ['image']

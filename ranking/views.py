@@ -154,15 +154,16 @@ class RankingPositionDelete(generics.DestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.ranking_position
-        self.perform_destroy(instance, kwargs['position'])
+        instance.delete()
+        # self.perform_destroy(instance, kwargs['position'])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def perform_destroy(self, instance, position):
-        positions_to_update = self.ranking_positions[position-1:]
-        for pos in positions_to_update:
-            pos.position -= 1
-            pos.save()
-        instance.delete()
+    # def perform_destroy(self, instance, position):
+    #     positions_to_update = self.ranking_positions[position-1:]
+    #     for pos in positions_to_update:
+    #         pos.position -= 1
+    #         pos.save()
+    #     instance.delete()
 
 class RankingPositionUpdate(generics.RetrieveUpdateAPIView):
     permission_classes = [IsOwnerOfPosition]

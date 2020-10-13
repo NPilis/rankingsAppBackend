@@ -8,7 +8,7 @@ class RankingPositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = RankingPosition
         fields = ['title', 'ranking', 'description', 'position', 'image']
-        read_only_fields = ['ranking', 'position']
+        read_only_fields = ['ranking']
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(many=False, read_only=True)

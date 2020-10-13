@@ -81,13 +81,6 @@ class RankingPosition(models.Model):
     def __str__(self):
         return self.title
 
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            ranking_positions = self.ranking.ranking_positions.all()
-            if ranking_positions:
-                self.position = ranking_positions.last().position + 1
-        super(RankingPosition, self).save(*args, **kwargs)
-
     class Meta:
         ordering = ('ranking', 'position')
 
