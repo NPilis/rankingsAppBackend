@@ -16,9 +16,10 @@ urlpatterns = [
     path('<uuid:uuid>/delete/', views.DeleteRanking.as_view(), name='ranking-delete'),
     path('<uuid:uuid>/edit/', views.EditRanking.as_view(), name='ranking-edit'),
     path('<uuid:uuid>/create-rp/', views.RankingPositionsCreate.as_view(), name='ranking-position-create'),
-    path('<uuid:uuid>/delete-rp/<int:position>/', views.RankingPositionDelete.as_view(), name='ranking-position-delete'),
-    path('<uuid:uuid>/update-rp/<int:position>/', views.RankingPositionUpdate.as_view(), name='ranking-position-update'),
+    path('<uuid:uuid>/delete-rp/<int:id>/', views.RankingPositionDelete.as_view(), name='ranking-position-delete'),
+    path('<uuid:uuid>/update-rp/<int:id>/', views.RankingPositionUpdate.as_view(), name='ranking-position-update'),
     path('<uuid:uuid>/like/', views.RankingLike.as_view(), name='ranking-like'),
     path('<uuid:uuid>/dislike/', views.RankingDisLike.as_view(), name='ranking-dislike'),
     path('<uuid:uuid>/comments/', views.RankingComments.as_view(), name='ranking-comments'),
+    path('<uuid:uuid>/edit/change-positions/', views.ChangePositions.as_view(), name='change-positions')
 ]

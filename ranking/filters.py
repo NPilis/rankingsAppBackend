@@ -22,9 +22,9 @@ def get_dislike_if_exist(ranking, user):
         return False
     return dislike
 
-def get_ranking_position(query, position):
+def get_ranking_position(query, id):
     try:
-        return query.get(position=position)
+        return query.filter(id=id).first()
     except RankingPosition.DoesNotExist:
         raise Http404("Ranking position does not exist.")
 

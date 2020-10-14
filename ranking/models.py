@@ -77,7 +77,7 @@ class RankingPosition(models.Model):
     description = models.CharField(max_length=100)
     position = models.PositiveIntegerField(default=1)
     image = models.ImageField(blank=True)
-
+    
     def __str__(self):
         return self.title
 

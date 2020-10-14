@@ -9,7 +9,8 @@ from ranking.serializers import (CommentSerializer, RankingCreateSerializer,
                                  RankingDetailSerializer,
                                  RankingEditSerializer,
                                  RankingPositionSerializer,
-                                 TopThreeRankingSerializer)
+                                 TopThreeRankingSerializer,
+                                 PositionEditSerializer)
 # REST FRAMEWORK
 from rest_framework import generics, mixins, permissions, status
 from rest_framework.authentication import TokenAuthentication
@@ -35,10 +36,12 @@ class PrivateRankings(generics.ListAPIView):
         )
         if len(private_rankings):
             page = self.paginate_queryset(private_rankings)
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
         return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
-        
+
+
 class PublicRankings(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = TopThreeRankingSerializer
@@ -48,9 +51,11 @@ class PublicRankings(generics.ListAPIView):
         public_rankings = Ranking.objects.filter(status="public")
         if len(public_rankings):
             page = self.paginate_queryset(public_rankings)
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
         return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
+
 
 class UserRankings(generics.ListAPIView):
     permission_classes = [AllowAny]
@@ -64,9 +69,11 @@ class UserRankings(generics.ListAPIView):
             author=user)
         if len(user_rankings):
             page = self.paginate_queryset(user_rankings)
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
         return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
+
 
 class FollowedUsersRankings(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -80,9 +87,11 @@ class FollowedUsersRankings(generics.ListAPIView):
             author__in=followed_users).order_by('-created_at')
         if len(followed_users_rankings):
             page = self.paginate_queryset(followed_users_rankings)
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
         return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
+
 
 class RankingDetail(generics.RetrieveAPIView):
     permission_classes = [IsAccesableForCurrentUser]
@@ -93,12 +102,14 @@ class RankingDetail(generics.RetrieveAPIView):
         self.check_object_permissions(self.request, ranking)
         return ranking
 
+
 class CreateRanking(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = RankingCreateSerializer
-    
+
     def perform_create(self, serializer):
         new_ranking = serializer.save(author=self.request.user)
+
 
 class DeleteRanking(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwnerOfRanking]
@@ -107,6 +118,7 @@ class DeleteRanking(generics.DestroyAPIView):
         ranking = filters.get_ranking(self.kwargs['uuid'])
         self.check_object_permissions(self.request, ranking)
         return ranking
+
 
 class EditRanking(generics.RetrieveUpdateAPIView):
     permission_classes = [IsOwnerOfRanking]
@@ -118,6 +130,8 @@ class EditRanking(generics.RetrieveUpdateAPIView):
         return ranking
 
 # Needs improvement on permissions
+
+
 class RankingPositionsCreate(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = RankingPositionSerializer
@@ -127,7 +141,7 @@ class RankingPositionsCreate(generics.ListCreateAPIView):
         self.ranking = filters.get_ranking(kwargs['uuid'])
         self.ranking_positions = self.ranking.ranking_positions.all()
         return super().dispatch(request, *args, **kwargs)
-    
+
     def list(self, request, *args, **kwargs):
         serializer = self.get_serializer(self.ranking_positions, many=True)
         return Response(serializer.data)
@@ -136,6 +150,8 @@ class RankingPositionsCreate(generics.ListCreateAPIView):
         serializer.save(ranking=self.ranking)
 
 # Needs improvement in dispatch and get_object methods
+
+
 class RankingPositionDelete(generics.DestroyAPIView):
     permission_classes = [IsOwnerOfRanking]
     queryset = ''
@@ -144,9 +160,10 @@ class RankingPositionDelete(generics.DestroyAPIView):
     def dispatch(self, request, *args, **kwargs):
         self.ranking = filters.get_ranking(kwargs['uuid'])
         self.ranking_positions = self.ranking.ranking_positions.all()
-        self.ranking_position = filters.get_ranking_position(self.ranking_positions, kwargs['position'])
+        self.ranking_position = filters.get_ranking_position(
+            self.ranking_positions, kwargs['id'])
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get_object(self):
         obj = self.ranking
         self.check_object_permissions(self.request, obj)
@@ -155,7 +172,6 @@ class RankingPositionDelete(generics.DestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         instance = self.ranking_position
         instance.delete()
-        # self.perform_destroy(instance, kwargs['position'])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     # def perform_destroy(self, instance, position):
@@ -165,15 +181,34 @@ class RankingPositionDelete(generics.DestroyAPIView):
     #         pos.save()
     #     instance.delete()
 
+
 class RankingPositionUpdate(generics.RetrieveUpdateAPIView):
     permission_classes = [IsOwnerOfPosition]
-    serializer_class = RankingPositionSerializer
-    
+    serializer_class = PositionEditSerializer
+
     def get_object(self):
         ranking_obj = filters.get_ranking(self.kwargs['uuid'])
-        position_obj = filters.get_ranking_position(ranking_obj.ranking_positions.all(), self.kwargs['position'])
+        position_obj = filters.get_ranking_position(
+            ranking_obj.ranking_positions.all(), self.kwargs['id'])
         self.check_object_permissions(self.request, position_obj)
         return position_obj
+
+
+class ChangePositions(APIView):
+
+    def put(self, request, *args, **kwargs):
+        ranking_obj = filters.get_ranking(self.kwargs['uuid'])
+        ranking_positions = ranking_obj.ranking_positions.all()
+        print(request.data)
+        serializer = RankingEditSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # if serializer.is_valid():
+        #     serializer.save()
+        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class RankingComments(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -188,16 +223,18 @@ class RankingComments(generics.ListCreateAPIView):
         ranking_comments = self.ranking.ranking_comments.all()
         if len(ranking_comments) > 0:
             page = self.paginate_queryset(ranking_comments)
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
         return Response({"STATUS": "No comments at this moment"}, status=status.HTTP_204_NO_CONTENT)
-    
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, ranking=self.ranking)
 
+
 class RankingLike(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request, *args, **kwargs):
         ranking = filters.get_ranking(kwargs['uuid'])
         curr_like = filters.get_like_if_exist(ranking, request.user)
@@ -211,9 +248,10 @@ class RankingLike(APIView):
             Like.objects.create(user=request.user, ranking=ranking)
             return Response({"STATUS": "Ranking liked"}, status=status.HTTP_200_OK)
 
+
 class RankingDisLike(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request, *args, **kwargs):
         ranking = filters.get_ranking(kwargs['uuid'])
         curr_like = filters.get_like_if_exist(ranking, request.user)

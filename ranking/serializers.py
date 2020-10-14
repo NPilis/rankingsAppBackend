@@ -7,7 +7,14 @@ class RankingPositionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RankingPosition
-        fields = ['title', 'ranking', 'description', 'position', 'image']
+        fields = ['id', 'title', 'ranking', 'description', 'position', 'image']
+        read_only_fields = ['ranking']
+
+class PositionEditSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RankingPosition
+        fields = ['position']
         read_only_fields = ['ranking']
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -39,10 +46,12 @@ class RankingCreateSerializer(serializers.ModelSerializer):
         return ranking
 
 class RankingEditSerializer(serializers.ModelSerializer):
+    ranking_positions = PositionEditSerializer(many=True, required=False)
 
     class Meta:
         model = Ranking
-        fields = ['title', 'content', 'status', 'image']
+        fields = ['ranking_positions']
+
 
 class RankingDetailSerializer(serializers.ModelSerializer):
     ranking_positions = RankingPositionSerializer(many=True, read_only=True)
