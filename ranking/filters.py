@@ -1,6 +1,8 @@
 from ranking.models import Ranking, RankingPosition, Like, DisLike
 from user.models import User
 from django.http import Http404
+from datetime import timedelta
+from django.utils import timezone
 
 def get_ranking(ranking_uuid):
     try:
@@ -33,3 +35,8 @@ def get_user(user_uuid):
         return User.objects.get(uuid=user_uuid)
     except User.DoesNotExist:
         raise Http404("User does not exist.")
+
+def set_time_range(days):
+    curr_date = timezone.now()
+    timestamp = curr_date - timedelta(days=days)
+    return timestamp

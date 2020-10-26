@@ -264,3 +264,37 @@ class RankingDisLike(APIView):
                 curr_like.delete()
             DisLike.objects.create(user=request.user, ranking=ranking)
             return Response({"STATUS": "Ranking disliked"}, status=status.HTTP_200_OK)
+
+
+class HottestRankings(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = TopThreeRankingSerializer
+    queryset = ''
+
+    def list(self, request, **kwargs):
+        timestamp = filters.set_time_range(kwargs['days'])
+        hottest_rankings = Ranking.objects.filter(
+            status="public",
+            created_at__gt=timestamp
+        )
+        if len(hottest_rankings):
+            page = self.paginate_queryset(hottest_rankings)
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
+
+class NewestRankings(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = TopThreeRankingSerializer
+    queryset = ''
+
+    def list(self, request, **kwargs):
+        timestamp = filters.set_time_range(kwargs['days'])
+        newest_rankings = Ranking.objects.filter(status="public", created_at__gt=timestamp).order_by('-created_at')
+        if len(newest_rankings):
+            page = self.paginate_queryset(newest_rankings)
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
