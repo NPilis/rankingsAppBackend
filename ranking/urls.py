@@ -23,5 +23,6 @@ urlpatterns = [
     path('<uuid:uuid>/like/', views.RankingLike.as_view(), name='ranking-like'),
     path('<uuid:uuid>/dislike/', views.RankingDisLike.as_view(), name='ranking-dislike'),
     path('<uuid:uuid>/comments/', views.RankingComments.as_view(), name='ranking-comments'),
-    path('<uuid:uuid>/edit/change-positions/', views.ChangePositions.as_view(), name='change-positions')
+    path('<uuid:uuid>/edit/change-positions/', views.ChangePositions.as_view(), name='change-positions'),
+    path('search/<str:query>/', views.SearchRanking.as_view(), name='ranking-search')
 ]

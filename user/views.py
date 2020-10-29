@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, TrigramSimilarity
 
 class CurrentUser(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = DetailUserSerializer
@@ -54,6 +55,24 @@ class EditProfile(generics.UpdateAPIView):
     def get_object(self):
         print(self.request.user.username)
         return self.request.user
+
+class SearchUser(generics.ListAPIView):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+
+    def list(self, request, **kwargs):
+        search_query = kwargs["query"]
+        if search_query:
+            results = User.objects.annotate(
+                similarity=TrigramSimilarity('username', search_query)
+            ).filter(similarity__gt=0.1).order_by('-similarity')
+        if len(results):
+            page = self.paginate_queryset(results)
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        return Response({"STATUS": "Can't find any users."}, status=status.HTTP_204_NO_CONTENT)
+
 
 # @api_view(['POST'])
 # # @permission_classes([IsAuthenticated])

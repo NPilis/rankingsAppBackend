@@ -20,8 +20,9 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from . import filters
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, TrigramSimilarity
+from . import filters as f
+from rest_framework import filters
 from .permissions import IsAccesableForCurrentUser, IsOwnerOfPosition, IsOwnerOrReadOnly, IsOwnerOfRanking
 
 
@@ -63,7 +64,7 @@ class UserRankings(generics.ListAPIView):
     queryset = ''
 
     def list(self, request, uuid, **kwargs):
-        user = filters.get_user(uuid)
+        user = f.get_user(uuid)
         user_rankings = Ranking.objects.filter(
             status="public",
             author=user)
@@ -98,7 +99,7 @@ class RankingDetail(generics.RetrieveAPIView):
     serializer_class = RankingDetailSerializer
 
     def get_object(self):
-        ranking = filters.get_ranking(self.kwargs['uuid'])
+        ranking = f.get_ranking(self.kwargs['uuid'])
         self.check_object_permissions(self.request, ranking)
         return ranking
 
@@ -115,7 +116,7 @@ class DeleteRanking(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwnerOfRanking]
 
     def get_object(self):
-        ranking = filters.get_ranking(self.kwargs['uuid'])
+        ranking = f.get_ranking(self.kwargs['uuid'])
         self.check_object_permissions(self.request, ranking)
         return ranking
 
@@ -125,7 +126,7 @@ class EditRanking(generics.RetrieveUpdateAPIView):
     serializer_class = RankingEditSerializer
 
     def get_object(self):
-        ranking = filters.get_ranking(self.kwargs['uuid'])
+        ranking = f.get_ranking(self.kwargs['uuid'])
         self.check_object_permissions(self.request, ranking)
         return ranking
 
@@ -138,7 +139,7 @@ class RankingPositionsCreate(generics.ListCreateAPIView):
     queryset = ''
 
     def dispatch(self, request, *args, **kwargs):
-        self.ranking = filters.get_ranking(kwargs['uuid'])
+        self.ranking = f.get_ranking(kwargs['uuid'])
         self.ranking_positions = self.ranking.ranking_positions.all()
         return super().dispatch(request, *args, **kwargs)
 
@@ -158,9 +159,9 @@ class RankingPositionDelete(generics.DestroyAPIView):
     serializer_class = RankingPositionSerializer
 
     def dispatch(self, request, *args, **kwargs):
-        self.ranking = filters.get_ranking(kwargs['uuid'])
+        self.ranking = f.get_ranking(kwargs['uuid'])
         self.ranking_positions = self.ranking.ranking_positions.all()
-        self.ranking_position = filters.get_ranking_position(
+        self.ranking_position = f.get_ranking_position(
             self.ranking_positions, kwargs['id'])
         return super().dispatch(request, *args, **kwargs)
 
@@ -187,8 +188,8 @@ class RankingPositionUpdate(generics.RetrieveUpdateAPIView):
     serializer_class = PositionEditSerializer
 
     def get_object(self):
-        ranking_obj = filters.get_ranking(self.kwargs['uuid'])
-        position_obj = filters.get_ranking_position(
+        ranking_obj = f.get_ranking(self.kwargs['uuid'])
+        position_obj = f.get_ranking_position(
             ranking_obj.ranking_positions.all(), self.kwargs['id'])
         self.check_object_permissions(self.request, position_obj)
         return position_obj
@@ -197,7 +198,7 @@ class RankingPositionUpdate(generics.RetrieveUpdateAPIView):
 class ChangePositions(APIView):
 
     def put(self, request, *args, **kwargs):
-        ranking_obj = filters.get_ranking(self.kwargs['uuid'])
+        ranking_obj = f.get_ranking(self.kwargs['uuid'])
         ranking_positions = ranking_obj.ranking_positions.all()
         print(request.data)
         serializer = RankingEditSerializer(data=request.data)
@@ -216,7 +217,7 @@ class RankingComments(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
 
     def dispatch(self, request, *args, **kwargs):
-        self.ranking = filters.get_ranking(kwargs['uuid'])
+        self.ranking = f.get_ranking(kwargs['uuid'])
         return super(RankingComments, self).dispatch(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
@@ -236,9 +237,9 @@ class RankingLike(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        ranking = filters.get_ranking(kwargs['uuid'])
-        curr_like = filters.get_like_if_exist(ranking, request.user)
-        curr_dislike = filters.get_dislike_if_exist(ranking, request.user)
+        ranking = f.get_ranking(kwargs['uuid'])
+        curr_like = f.get_like_if_exist(ranking, request.user)
+        curr_dislike = f.get_dislike_if_exist(ranking, request.user)
         if curr_like:
             curr_like.delete()
             return Response({"STATUS": "Ranking unliked"}, status=status.HTTP_200_OK)
@@ -253,9 +254,9 @@ class RankingDisLike(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        ranking = filters.get_ranking(kwargs['uuid'])
-        curr_like = filters.get_like_if_exist(ranking, request.user)
-        curr_dislike = filters.get_dislike_if_exist(ranking, request.user)
+        ranking = f.get_ranking(kwargs['uuid'])
+        curr_like = f.get_like_if_exist(ranking, request.user)
+        curr_dislike = f.get_dislike_if_exist(ranking, request.user)
         if curr_dislike:
             curr_dislike.delete()
             return Response({"STATUS": "Ranking dislike removed"}, status=status.HTTP_200_OK)
@@ -272,7 +273,7 @@ class HottestRankings(generics.ListAPIView):
     queryset = ''
 
     def list(self, request, **kwargs):
-        timestamp = filters.set_time_range(kwargs['days'])
+        timestamp = f.set_time_range(kwargs['days'])
         hottest_rankings = Ranking.objects.filter(
             status="public",
             created_at__gt=timestamp
@@ -290,10 +291,32 @@ class NewestRankings(generics.ListAPIView):
     queryset = ''
 
     def list(self, request, **kwargs):
-        timestamp = filters.set_time_range(kwargs['days'])
+        timestamp = f.set_time_range(kwargs['days'])
         newest_rankings = Ranking.objects.filter(status="public", created_at__gt=timestamp).order_by('-created_at')
         if len(newest_rankings):
             page = self.paginate_queryset(newest_rankings)
+            serializer = self.get_serializer(
+                page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        return Response({"STATUS": "No rankings at this moment"}, status=status.HTTP_204_NO_CONTENT)
+
+
+class SearchRanking(generics.ListAPIView):
+    serializer_class = TopThreeRankingSerializer
+    queryset = ''
+
+    def get_queryset(self):
+        queryset = Ranking.objects.filter(status='public')
+        return queryset
+
+    def list(self, request, **kwargs):
+        search_query = kwargs["query"]
+        if search_query:
+            results = Ranking.objects.annotate(
+                similarity=TrigramSimilarity('title', search_query)
+            ).filter(similarity__gt=0.1).order_by('-similarity')
+        if len(results):
+            page = self.paginate_queryset(results)
             serializer = self.get_serializer(
                 page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
