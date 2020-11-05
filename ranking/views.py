@@ -99,6 +99,7 @@ class RankingDetail(generics.RetrieveAPIView):
     serializer_class = RankingDetailSerializer
 
     def get_object(self):
+        print(self.request.user)
         ranking = f.get_ranking(self.kwargs['uuid'])
         self.check_object_permissions(self.request, ranking)
         return ranking
