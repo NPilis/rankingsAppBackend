@@ -46,11 +46,10 @@ class RankingCreateSerializer(serializers.ModelSerializer):
         return ranking
 
 class RankingEditSerializer(serializers.ModelSerializer):
-    ranking_positions = PositionEditSerializer(many=True, required=False)
-
+    
     class Meta:
         model = Ranking
-        fields = ['ranking_positions']
+        fields = ['title', 'content', 'image', 'status']
 
 
 class RankingDetailSerializer(serializers.ModelSerializer):
