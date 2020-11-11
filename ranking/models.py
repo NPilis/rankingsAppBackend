@@ -18,9 +18,9 @@ class Ranking(models.Model):
         on_delete=models.CASCADE,
         related_name='rankings'
     )
-    title = models.CharField(max_length=40)
+    title = models.CharField(max_length=70)
     content = models.CharField(
-        max_length=200,
+        max_length=300,
         blank=True
     )
     status = models.CharField(
@@ -68,13 +68,13 @@ class Ranking(models.Model):
         return self.title
 
 class RankingPosition(models.Model):
-    title = models.CharField(max_length=40)
+    title = models.CharField(max_length=70)
     ranking = models.ForeignKey(
         Ranking,
         related_name='ranking_positions',
         on_delete=models.CASCADE
     )
-    description = models.CharField(max_length=100)
+    description = models.CharField(max_length=250)
     position = models.PositiveIntegerField(default=1)
     image = models.ImageField(blank=True)
     
