@@ -2,7 +2,6 @@ from django.urls import path
 from authentication import views
 from knox import views as knox_views
 
-
 app_name = 'auth'
 
 urlpatterns = [

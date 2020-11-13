@@ -1,5 +1,6 @@
 from django.contrib.auth.models import BaseUserManager
 
+
 class CustomUserManager(BaseUserManager):
 
     def create_user(self, email, username, password, **kwargs):
@@ -13,7 +14,6 @@ class CustomUserManager(BaseUserManager):
         user.save()
         return user
 
-
     def create_superuser(self, email, username, password, **kwargs):
         kwargs.setdefault('is_superuser', True)
         kwargs.setdefault('is_staff', True)
@@ -25,4 +25,3 @@ class CustomUserManager(BaseUserManager):
         )
 
         return superuser
-

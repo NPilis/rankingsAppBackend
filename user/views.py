@@ -38,6 +38,9 @@ class UserDetail(APIView):
         return Response(user_serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request, username):
+        """
+        Create and delete follow 
+        """
         user_from = request.user
         user_to = User.objects.get(username=username)
         if user_from != user_to:
@@ -53,7 +56,6 @@ class EditProfile(generics.UpdateAPIView):
     serializer_class = UpdateUserSerializer
 
     def get_object(self):
-        print(self.request.user.username)
         return self.request.user
 
 class SearchUser(generics.ListAPIView):
@@ -61,6 +63,11 @@ class SearchUser(generics.ListAPIView):
     queryset = User.objects.all()
 
     def list(self, request, **kwargs):
+        """
+        Trigram based search on usernames by query passed in the url
+        Returns list of ordered user by the largest similarity
+        HTTP_204 if no results
+        """
         search_query = kwargs["query"]
         if search_query:
             results = User.objects.annotate(
@@ -72,16 +79,3 @@ class SearchUser(generics.ListAPIView):
                 page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
         return Response({"STATUS": "Can't find any users."}, status=status.HTTP_204_NO_CONTENT)
-
-
-# @api_view(['POST'])
-# # @permission_classes([IsAuthenticated])
-# def follow_user(request, uuid):
-#     if request.method == "POST":
-#         user_from = request.user
-#         user_to = User.objects.get(uuid=uuid)
-#         if user_from != user_to:
-#             Follow.objects.create(user_from=user_from, user_to=user_to)
-#             return Response({"Status": "{} followed {}".format(user_from.username, user_to.username)}, status=status.HTTP_200_OK)
-#         return Response({"Status": "Cant follow yourself"}, status=status.HTTP_400_BAD_REQUEST)
-

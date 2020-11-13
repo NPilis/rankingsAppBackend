@@ -6,7 +6,6 @@ from ranking.views import UserRankings
 app_name = 'users'
 
 urlpatterns = [
-    # path('', CurrentUser.as_view(), name='current-user'),
     path('', UsersList.as_view(), name='users-list'),
     path('currentuser/edit', EditProfile.as_view(), name='edit-profile'),
     path('create/', UserCreate.as_view(), name='user-create'),

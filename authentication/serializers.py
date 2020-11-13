@@ -7,6 +7,10 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField()
     
     def _validate_username(self, username, password):
+        """
+        Validates if username is correct
+        Checks if passed username exist as email or login in database.
+        """
         user = None
 
         if '@' not in username:
@@ -24,6 +28,9 @@ class LoginSerializer(serializers.Serializer):
         return user
 
     def validate(self, data):
+        """
+        Returns user if active and form is correct.
+        """
         username = data.get('username')
         password = data.get('password')
 
@@ -43,6 +50,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, data):
+        """
+        Checks if username already exist in database.
+        Username needs to be unique
+        """
         username = data.get("username")
         if User.objects.filter(username=username).exists():
             raise serializers.ValidationError("User with this username already exists.")

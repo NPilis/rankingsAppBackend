@@ -4,7 +4,6 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Custom permission to only allow owners of an object to edit it.
     """
-
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -20,9 +19,12 @@ class IsOwnerOfPosition(permissions.BasePermission):
         return obj.ranking.author == request.user
 
 class IsAccesableForCurrentUser(permissions.BasePermission):
+    """
+    Checks if ranking is private and allow only owners to see it.
+    If status is public then allow any user
+    """
     def has_object_permission(self, request, view, obj):
         if obj.status == "private":
-            print(request.user)
             if obj.author == request.user:
                 return True
             else:

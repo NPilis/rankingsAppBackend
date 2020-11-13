@@ -8,6 +8,7 @@ from django.utils.text import slugify
 
 UserModel = get_user_model()
 
+
 class Ranking(models.Model):
     STATUS_CHOICES = (
         ('private', 'Private'),
@@ -28,7 +29,7 @@ class Ranking(models.Model):
         choices=STATUS_CHOICES,
         default='private'
     )
-    image = models.ImageField(blank=True)
+    image = models.ImageField(blank=True, upload_to='ranking/')
     uuid = models.UUIDField(
         unique=True,
         db_index=True,
@@ -67,6 +68,7 @@ class Ranking(models.Model):
     def __str__(self):
         return self.title
 
+
 class RankingPosition(models.Model):
     title = models.CharField(max_length=70)
     ranking = models.ForeignKey(
@@ -74,15 +76,16 @@ class RankingPosition(models.Model):
         related_name='ranking_positions',
         on_delete=models.CASCADE
     )
-    description = models.CharField(max_length=250)
+    description = models.CharField(max_length=250, blank=True)
     position = models.PositiveIntegerField(default=1)
-    image = models.ImageField(blank=True)
-    
+    image = models.ImageField(blank=True, upload_to='position/')
+
     def __str__(self):
         return self.title
 
     class Meta:
         ordering = ('ranking', 'position')
+
 
 class Comment(models.Model):
 
@@ -107,28 +110,29 @@ class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     edited_at = models.DateTimeField(auto_now=True)
     active = models.BooleanField(default=True)
-        
+
     class Meta:
         ordering = ('-created_at',)
 
     def __str__(self):
         return '{} commented {}'.format(self.user, self.ranking)
 
-    
+
 class Like(models.Model):
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     ranking = models.ForeignKey(Ranking, on_delete=models.CASCADE)
 
     def __str__(self):
         return '{} likes {}'.format(self.user.username, self.ranking.title)
-    
+
     def save(self, *args, **kwargs):
         self.ranking.likes.add(self.user)
         super(Like, self).save(*args, **kwargs)
-    
+
     def delete(self, *args, **kwargs):
         self.ranking.likes.remove(self.user)
         super(Like, self).delete(*args, **kwargs)
+
 
 class DisLike(models.Model):
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
@@ -140,16 +144,15 @@ class DisLike(models.Model):
     def save(self, *args, **kwargs):
         self.ranking.dislikes.add(self.user)
         super(DisLike, self).save(*args, **kwargs)
-    
+
     def delete(self, *args, **kwargs):
         self.ranking.dislikes.remove(self.user)
         super(DisLike, self).delete(*args, **kwargs)
 
-        
+
 class Share(models.Model):
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     ranking = models.ForeignKey(Ranking, on_delete=models.CASCADE)
 
     def __str__(self):
         return '{} shared {}'.format(self.user.username, self.ranking.title)
-    

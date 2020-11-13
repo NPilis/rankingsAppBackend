@@ -9,6 +9,10 @@ class Login(generics.GenericAPIView):
     serializer_class = LoginSerializer
 
     def post(self, request):
+        """
+        Authenticate through username or email and password
+        Returns current user and token
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
@@ -22,6 +26,11 @@ class Register(generics.GenericAPIView):
     serializer_class = RegisterSerializer
 
     def post(self, request):
+        """
+        Register with email, username and password.
+        Adding profile picture is optional.
+        Returns authenticated user with token if form is correct.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
