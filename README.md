@@ -15,9 +15,18 @@ And other additional packages aveilable in 'requirements.txt' file.
 ## Database:
 - PostgreSQL
 
-## REST API overview
+## REST API Overview
 
-### API endpoints
+> ### Authentication
+Authentication works with Tokens by ensuring that each request that needs authorization to a server is accompanied by signed token which the server verifies for authenticity and only then responds the request. Users can login and register with username, email and password. Before returning the Token server validates the data by checking uniqueness of username and some special requirements like `@` in the email or correct password.
+
+> ### Permissions
+Not authenticated users are only allowed to browse rankings, profiles, comments and search database. Creating own ranks, activity and integration with others by follows, likes, comments etc. requires Token otherwise server returns `401 Unauthorized`
+
+> ### Rankings system
+Rankings are the main feature of application. Each of them has its own `status` which can be set to `private` (access only for author) or `public` and collection of `positions` which are sorted in user specified order. Author of ranking is able to edit, delete, add positions and change their placement. There are two ways of exploring rankings. Newest - recently created and Hottest with specified timestamp - rankings are filtered and sorted by `rating` (total difference between likes and dislikes) to determine the most popular ones from recent days.
+
+## API Endpoints
 
 | HTTP method | URI path | Description |
 | :--- | :--- | :--- |
@@ -49,8 +58,6 @@ And other additional packages aveilable in 'requirements.txt' file.
 | POST | /api/rankings/**_:uuid_**/dislike | Sets/deletes 'dislike' relation between current user and ranking |
 | GET | /api/rankings/search/**_:query_** | Retrives paginated list of searched rankings |
 
-
-
 ### Status Codes
 
 | Status Code | Description |
@@ -59,6 +66,7 @@ And other additional packages aveilable in 'requirements.txt' file.
 | 201 | `CREATED` |
 | 204 | `NO CONTENT` |
 | 400 | `BAD REQUEST` |
+| 401 | `UNAUTHORIZED` |
 | 500 | `INTERNAL SERVER ERROR` |
 
 ### Front-end side
